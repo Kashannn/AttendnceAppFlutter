@@ -40,7 +40,8 @@ class DatabaseHelper {
         email TEXT,
         phone TEXT,
         password TEXT,
-        roll TEXT
+        roll TEXT,
+        imagePath TEXT
       )
     ''');
 
@@ -50,7 +51,8 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY,
         student_id INTEGER,
         date TEXT,
-        presence INTEGER
+        presence TEXT
+        
       )
     ''');
   }
@@ -58,11 +60,12 @@ class DatabaseHelper {
   // Insert a user
   Future<int> insertUser(User user) async {
     final stmt = _database.prepare(
-      'INSERT INTO users (name, email, phone, password, roll) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO users (name, email, phone, password, roll, imagePath) VALUES (?, ?, ?, ?, ?, ?)',
     );
-    stmt.execute([user.name, user.email, user.phone, user.password, user.roll]);
+    stmt.execute([user.name, user.email, user.phone, user.password, user.roll, user.imagePath]);
     return _database.lastInsertRowId;
   }
+
 
   // Insert attendance data
   Future<int> insertAttendance(Attendance attendance) async {
@@ -78,4 +81,26 @@ class DatabaseHelper {
     final results = _database.select('SELECT * FROM users');
     return results.map((row) => User.fromJson(row)).toList();
   }
+
+  //get all attendance
+  Future<List<Attendance>> getAllAttendance() async {
+    final results = _database.select('SELECT * FROM attendance');
+    return results.map((row) => Attendance.fromJson(row)).toList();
+  }
+
+
+  //Update User Image
+  Future<void> updateUserImage(int id, String imagePath) async {
+    final stmt = _database.prepare(
+      'UPDATE users SET imagePath = ? WHERE id = ?',
+    );
+    stmt.execute([imagePath, id]);
+  }
+
+  //Get User Image
+  Future<String> getUserImage(int id) async {
+    final results = _database.select('SELECT imagePath FROM users WHERE id = $id');
+    return results.map((row) => row['imagePath'] as String).first;
+  }
+
 }

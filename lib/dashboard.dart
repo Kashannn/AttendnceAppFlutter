@@ -1,11 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:internship/DatabaseHelper/dbhelper.dart';
 import 'dart:io';
 
 import 'package:internship/ViewAttendence.dart';
 
-class UserDashboard extends StatelessWidget {
-  const UserDashboard({Key? key}) : super(key: key);
+import 'classes/attendance.dart';
+import 'classes/user.dart';
+
+class UserDashboard extends StatefulWidget {
+  final User user;
+
+  UserDashboard({Key? key, required this.user}) : super(key: key);
+
+  @override
+  State<UserDashboard> createState() => _UserDashboardState();
+}
+
+class _UserDashboardState extends State<UserDashboard> {
+
+  @override
+  void initState() {
+    _loadProfileImage();
+    super.initState();
+  }
+
+  String _profileImagePath = '';
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.getImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      String imagePath = pickedFile.path;
+      await DatabaseHelper().updateUserImage(widget.user.id!, imagePath);
+      _loadProfileImage();
+    }
+  }
+
+  Future<void> _loadProfileImage() async {
+    String? imagePath = await DatabaseHelper().getUserImage(widget.user.id!);
+    if (imagePath != null && imagePath.isNotEmpty) {
+      setState(() {
+        _profileImagePath = imagePath;
+      });
+    }
+  }
+
+  //Already marked attendance popup
+  Future<void> _alreadyMarkedAttendance(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return  AlertDialog(
+          title: Text('Already Marked Attendance'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('You have already marked your attendance for today'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Ok'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   //Alert Dialog Box for Absent Description
   Future<void> _absentDescription(BuildContext context) async {
@@ -32,8 +99,13 @@ class UserDashboard extends StatelessWidget {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Submit'),
-              onPressed: () {
+              child: Text('Submit'),
+              onPressed: () async {
+                String date = DateTime.now().toString().substring(0, 10);
+                Attendance atteendence = Attendance(date: date, presence: 'Absent', studentId: widget.user.id);
+                final dbHelper = DatabaseHelper();
+                await dbHelper.openDatabase();
+                await dbHelper.insertAttendance(atteendence);
                 Navigator.of(context).pop();
               },
             ),
@@ -61,7 +133,15 @@ class UserDashboard extends StatelessWidget {
           actions: <Widget>[
             TextButton(
               child: const Text('Yes'),
-              onPressed: () {
+              onPressed: () async {
+                String date = DateTime.now().toString().substring(0, 10);
+                print (date);
+
+                Attendance atteendence = Attendance(date: date, presence: 'Present', studentId: widget.user.id);
+                final dbHelper = DatabaseHelper();
+                await dbHelper.openDatabase();
+                await dbHelper.insertAttendance(atteendence);
+
                 Navigator.of(context).pop();
               },
             ),
@@ -76,59 +156,119 @@ class UserDashboard extends StatelessWidget {
       },
     );
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       body: SingleChildScrollView(
         child: Column(
           children: [
             Container(
-                height: MediaQuery.of(context).size.height * 0.25,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(30),
-                    bottomRight: Radius.circular(30),
-                  ),
-                  color: Colors.blue,
+              height: MediaQuery.of(context).size.height * 0.28,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
                 ),
-                child: Row(children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20),
-                    child: GestureDetector(
-                      onTap: () {
-                        print('Image Picker');
-                      },
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundImage: AssetImage('assets/images/1.jpg'),
+                color: Colors.blue,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: GestureDetector(
+                          onTap: _pickImage,
+                          child: CircleAvatar(
+                            radius: 50,
+                            backgroundImage: _profileImagePath.isNotEmpty
+                                ? FileImage(File(_profileImagePath))
+                                : null,
+                          ),
+                        ),
+
                       ),
-                    ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20),
+                        child: OutlinedButton(
+                          onPressed: () {
+                            print('Logout');
+                            Navigator.pop(context);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            side: BorderSide(color: Colors.white), // Set the border color
+                          ),
+                          child: Text(
+                            'Logout',
+                            style: TextStyle(color: Colors.white), // Set the text color
+                          ),
+                        ),
+                      ),
+
+                    ],
                   ),
                   Padding(
-                    padding: EdgeInsets.only(left: 20),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
                       children: [
-                        Text(
-                          'Name',
-                          style: TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Name:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              'Email:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          'Email',
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
+                        SizedBox(width: 10), // Adjusted space between label and value
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${widget.user.name}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              '${widget.user.email}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                ])),
+                ],
+              ),
+            )
+
+            ,
             SizedBox(
               height: 20,
             ),
@@ -139,10 +279,34 @@ class UserDashboard extends StatelessWidget {
                 crossAxisCount: 3,
                 children: [
                   GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       print('Mark Present');
-                      //show dialog box for conformation of present
-                      _presentConfirmation(context);
+
+                      bool check = false;
+                      //Get all Attendance from dbhelper
+                      final dbHelper = DatabaseHelper();
+                      await dbHelper.openDatabase();
+                      await dbHelper.getAllAttendance().then((value) {
+
+                        //match the user id with the attendance user id
+                        for (var item in value) {
+                          if (item.studentId == widget.user.id && item.date == DateTime.now().toString().substring(0, 10)) {
+                            print('Attendance already marked');
+                            check = true;
+                            _alreadyMarkedAttendance(context);
+
+                           // _alreadyMarked(context);
+                            return null;
+
+                          }
+
+                        }
+                      });
+                      //if attendance not marked then mark attendance
+                      if (check == false) {
+                        _presentConfirmation(context);
+                      }
+
                     },
                     child: Card(
                       shape: RoundedRectangleBorder(
@@ -167,9 +331,28 @@ class UserDashboard extends StatelessWidget {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
+                    onTap: () async {
+                      bool check = false;
+      final dbHelper = DatabaseHelper();
+      await dbHelper.openDatabase();
+      await dbHelper.getAllAttendance().then((value) {
+
+        //match the user id with the attendance user id
+        for (var item in value) {
+          if (item.studentId == widget.user.id && item.date == DateTime.now().toString().substring(0, 10)) {
+            print('Attendance already marked');
+            check = true;
+            _alreadyMarkedAttendance(context);
+
+            // _alreadyMarked(context);
+            return null;
+
+          }}});
+      if(check==false){
+        _absentDescription(context);
+      }
                       print('Mark Leave');
-                      _absentDescription(context);
+                      //
                     },
                     child: Card(
                       shape: RoundedRectangleBorder(
@@ -200,7 +383,9 @@ class UserDashboard extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ViewAttendance()),
+                            builder: (context) => ViewAttendance(
+                              user: widget.user,
+                            )),
                       );
 
                     },
