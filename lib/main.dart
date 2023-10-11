@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'login.dart';
-import 'signup.dart';
-import 'dashboard.dart';
+import 'package:internship/Screens/AdminScreens/admindashboard.dart';
+import 'Screens/AdminScreens/grade.dart';
+import 'Screens/AdminScreens/request.dart';
+import 'Screens/UserScreens/login.dart';
+import 'Screens/UserScreens/signup.dart';
+import 'Screens/UserScreens/dashboard.dart';
 void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
@@ -13,8 +16,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: _title,
-      home: login(),
+      home: RequestScreen(),
 
     );
   }

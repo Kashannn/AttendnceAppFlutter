@@ -26,7 +26,6 @@ class User {
     password: json['password'],
     roll: json['roll'],
     phone: json['phone'],
-    imagePath: json['imagePath'],
   );
 
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:internship/classes/user.dart';
 
-import 'Screens/studentList.dart';
-import 'Screens/grade.dart';
+import 'studentList.dart';
+import 'grade.dart';
 
 class admindashboard extends StatefulWidget {
 
@@ -23,18 +23,23 @@ class _admindashboardState extends State<admindashboard> {
               height: 20,
             ),
             Container(
-              height: MediaQuery.of(context).size.height * 0.55,
-              width: MediaQuery.of(context).size.width * 0.95,
+              height: MediaQuery
+                  .of(context)
+                  .size
+                  .height * 0.55,
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width * 0.95,
               child: GridView.count(
                 crossAxisCount: 3,
                 children: [
                   GestureDetector(
                     onTap: () {
-
                       print('Grade Students');
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => gradeScreen()),
+                        MaterialPageRoute(builder: (context) => ViewGrade()),
                       );
                     },
                     child: Card(
@@ -92,7 +97,6 @@ class _admindashboardState extends State<admindashboard> {
                         context,
                         MaterialPageRoute(builder: (context) => AllStudent()),
                       );
-
                     },
                     child: Card(
                       shape: RoundedRectangleBorder(
@@ -124,4 +128,5 @@ class _admindashboardState extends State<admindashboard> {
       ),
     );
   }
-}
+  }
+

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:internship/DatabaseHelper/dbhelper.dart';
+import 'package:internship/classes/request.dart';
 import 'dart:io';
 
-import 'package:internship/ViewAttendence.dart';
 
-import 'classes/attendance.dart';
-import 'classes/user.dart';
+import '../../classes/attendance.dart';
+import '../../classes/user.dart';
+import 'Viewattendence.dart';
 
 class UserDashboard extends StatefulWidget {
   final User user;
@@ -19,6 +20,7 @@ class UserDashboard extends StatefulWidget {
 
 class _UserDashboardState extends State<UserDashboard> {
 
+
   @override
   void initState() {
     _loadProfileImage();
@@ -26,6 +28,9 @@ class _UserDashboardState extends State<UserDashboard> {
   }
 
   String _profileImagePath = '';
+  TextEditingController reasonController = TextEditingController();
+
+
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -87,6 +92,7 @@ class _UserDashboardState extends State<UserDashboard> {
               children:  <Widget>[
                 Text('Please enter the reason for your absence'),
                 TextFormField(
+                  controller: reasonController,
                   minLines: 3,
                   maxLines: 5,
                   decoration: InputDecoration(
@@ -106,7 +112,10 @@ class _UserDashboardState extends State<UserDashboard> {
                 final dbHelper = DatabaseHelper();
                 await dbHelper.openDatabase();
                 await dbHelper.insertAttendance(atteendence);
+                Request request = Request(studentId: widget.user.id!, reason: reasonController.text, date: date);
+                await dbHelper.insertRequest(request);
                 Navigator.of(context).pop();
+
               },
             ),
           ],
@@ -292,7 +301,7 @@ class _UserDashboardState extends State<UserDashboard> {
                         for (var item in value) {
                           if (item.studentId == widget.user.id && item.date == DateTime.now().toString().substring(0, 10)) {
                             print('Attendance already marked');
-                            check = true;
+                            check = false;
                             _alreadyMarkedAttendance(context);
 
                            // _alreadyMarked(context);
@@ -330,6 +339,7 @@ class _UserDashboardState extends State<UserDashboard> {
                       ),
                     ),
                   ),
+
                   GestureDetector(
                     onTap: () async {
                       bool check = false;

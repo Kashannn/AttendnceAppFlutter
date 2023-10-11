@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'DatabaseHelper/dbhelper.dart';
-import 'classes/user.dart';
+import '../../DatabaseHelper/dbhelper.dart';
+import '../../classes/user.dart';
 import 'login.dart';
-import 'main.dart';
+import '../../main.dart';
 
 class SignUp extends StatefulWidget {
   SignUp({Key? key}) : super(key: key);

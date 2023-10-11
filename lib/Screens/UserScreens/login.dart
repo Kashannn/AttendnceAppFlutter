@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:internship/signup.dart';
-import 'DatabaseHelper/dbhelper.dart';
-import 'classes/user.dart';
+import 'package:internship/Screens/UserScreens/signup.dart';
+import '../AdminScreens/admindashboard.dart';
+import '../../DatabaseHelper/dbhelper.dart';
+import '../../classes/user.dart';
 import 'dashboard.dart';
 
 class login extends StatefulWidget {
@@ -19,10 +20,9 @@ class _loginState extends State<login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-          padding: const EdgeInsets.all(10),
-          child: ListView(
-            children: <Widget>[
+        body: Padding(
+            padding: const EdgeInsets.all(10),
+            child: ListView(children: <Widget>[
               Container(
                   alignment: Alignment.center,
                   padding: const EdgeInsets.all(10),
@@ -45,7 +45,7 @@ class _loginState extends State<login> {
                       child: TextFormField(
                         validator: (value) {
                           if (value!.isEmpty) {
-                            return 'Please Enter Email';
+                            return 'Please Enter name';
                           }
                           return null;
                         },
@@ -56,7 +56,7 @@ class _loginState extends State<login> {
                             color: Colors.green,
                           ),
                           border: OutlineInputBorder(),
-                          labelText: 'EMAIL',
+                          labelText: 'Email',
                         ),
                       ),
                     ),
@@ -88,42 +88,58 @@ class _loginState extends State<login> {
                 height: 30,
               ),
               Container(
-                  height: 50,
-                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                  child: ElevatedButton(
+                height: 50,
+                padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                child: ElevatedButton(
                     child: const Text('Login'),
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
                         String name = nameController.text;
                         String password = passwordController.text;
-                        final dbHelper = DatabaseHelper();
-                        await dbHelper.openDatabase();
-                        List<User> users = await dbHelper.getAllUser();
 
-                        for (var user in users) {
-                          print(user.email.trim() == name.trim() &&
-                              user.password.trim() == password.trim());
-                          if (user.email.trim() == name.trim() &&
-                              user.password.trim() == password.trim()) {
-                            print(user);
-                            print('valid');
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => UserDashboard(
-                                        user: user,
-                                      )),
-                            );
-                            return;
+                        // Check if the provided credentials are for the admin
+                        if (name == "admin@gmail.com" &&
+                            password == "admin123") {
+                          // Navigate to the admin dashboard
+                          // Replace `AdminDashboard` with the actual class for your admin dashboard
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => admindashboard()),
+                          );
+                          return;
+                        }else {
+                          final dbHelper = DatabaseHelper();
+                          await dbHelper.openDatabase();
+                          List<User> users = await dbHelper.getAllUser();
+
+                          for (var user in users) {
+                            print(name.trim());
+                            print(user.email.trim());
+                            if (user.email.trim() == name.trim() &&
+                                user.password.trim() == password.trim()) {
+                              print(user);
+                              print('valid');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        UserDashboard(
+                                          user: user,
+                                        )),
+                              );
+                              return;
+                            }
                           }
                         }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Invalid Credentials')),
+                          );
+                        }
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Invalid Credentials')),
-                        );
-                      }
-                    },
-                  )),
+                    }),
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
@@ -141,9 +157,7 @@ class _loginState extends State<login> {
                     },
                   )
                 ],
-              ),
-            ],
-          )),
-    );
+              )
+            ])));
   }
 }
